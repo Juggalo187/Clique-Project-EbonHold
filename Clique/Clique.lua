@@ -11,6 +11,28 @@ if Clique.version == "wowi:revision" then Clique.version = "SVN" end
 
 local L = Clique.Locals
 
+function Clique:GetCorrectSpellID(id)
+    -- Use our fixed calculation only for Clique
+    if ( SpellBookFrame.bookType == BOOKTYPE_PET ) then
+        return id + (SPELLS_PER_PAGE * (SPELLBOOK_PAGENUMBERS[BOOKTYPE_PET] - 1));
+    else
+        local name, texture, offset, numSpells = GetSpellTabInfo(SpellBookFrame.selectedSkillLine);
+        
+        if ( not GetCVarBool("ShowAllSpellRanks") ) then
+            local name2, texture2, offset2, numSpells2, highestRankOffset, highestRankNumSpells = GetSpellTabInfo(SpellBookFrame.selectedSkillLine);
+            offset = highestRankOffset or offset;
+        end
+        
+        local pageOffset = SPELLS_PER_PAGE * (SPELLBOOK_PAGENUMBERS[SpellBookFrame.selectedSkillLine] - 1)
+        local slot = id + offset + pageOffset;
+        
+        if ( not GetCVarBool("ShowAllSpellRanks") ) then
+            return GetKnownSlotFromHighestRankSlot(slot), slot;
+        end
+        return slot, slot;
+    end
+end
+
 function Clique:Enable()
 	-- Grab the localisation header
 	L = Clique.Locals
@@ -154,7 +176,8 @@ function Clique:EnableFrames()
 end	   
 
 function Clique:SpellBookButtonPressed(frame, button)
-    local id = SpellBook_GetSpellID(this:GetParent():GetID());
+    --local id = SpellBook_GetSpellID(this:GetParent():GetID());
+	local id = self:GetCorrectSpellID(this:GetParent():GetID());
     local texture = GetSpellTexture(id, SpellBookFrame.bookType)
     local name, rank = GetSpellName(id, SpellBookFrame.bookType)
 
